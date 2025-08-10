@@ -1,0 +1,14 @@
+<form action="{{ url_for('user.submit_quiz', quiz_id=quiz.id) }}" method="POST">
+    {% for question in quiz.questions %}
+        <div class="mb-3">
+            <p><strong>{{ question.text }}</strong></p>
+            {% for option in question.options %}
+            <div class="form-check">
+                <input type="radio" class="form-check-input" name="question_{{ question.id }}" value="{{ option.id }}" id="option_{{ question.id }}_{{ option.id }}" required>
+                <label class="form-check-label" for="option_{{ question.id }}_{{ option.id }}">{{ option.text }}</label>
+            </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Submit Quiz</button>
+</form>

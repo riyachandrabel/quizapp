@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">Welcome to your Dashboard, {{name}}!</h2>
+    <p class="text-center">Select a quiz or view your progress.</p>
+
+    <!-- User Summary Section -->
+    <h3 class="mt-4">Your Quiz Summary</h3>
+    <canvas id="quizSummaryChart" width="50" height="25"></canvas>
+
+    <!-- Notifications Section -->
+    <div id="notifications" class="alert alert-info text-center d-none" role="alert">
+        <!-- Notifications will appear here dynamically -->
+    </div>
+
+    <div class="text-end">
+        <a href="{{ url_for('user.logout') }}" class="btn btn-danger">Logout</a>
+    </div>
+
+    <!-- Subjects and Quizzes Section -->
+    <h3 class="mt-4">Available Subjects</h3>
+
+    {% if subjects %}
+    <div class="accordion" id="subjectsAccordion">
+        {% for subject in subjects %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ subject.id }}">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ subject.id }}" aria-expanded="true" aria-controls="collapse{{ subject.id }}">
+                    {{ subject.name }}
+                </button>
+            </h2>
+            <div id="collapse{{ subject.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ subject.id }}" data-bs-parent="#subjectsAccordion">
+                <div class="accordion-body">
+                    <p>{{ subject.description }}</p>
+
+                    <h5>Chapters</h5>
+                    {% if subject.chapters %}
+                    <div class="accordion" id="chaptersAccordion{{ subject.id }}">
+                        {% for chapter in subject.chapters %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingChapter{{ chapter.id }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChapter{{ chapter.id }}" aria-expanded="false" aria-controls="collapseChapter{{ chapter.id }}">
+                                    {{ chapter.name }}
+                                </button>
+                            </h2>
+                            <div id="collapseChapter{{ chapter.id }}" class="accordion-collapse collapse" aria-labelledby="headingChapter{{ chapter.id }}" data-bs-parent="#chaptersAccordion{{ subject.id }}">
+                                <div class="accordion-body">
+                                    <p>{{ chapter.description }}</p>
+
+                                    <h5>Quizzes</h5>
+                                    {% if chapter.quizzes %}
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Quiz Title</th>
+                                                <th>Status</th>
+                                                <th>Score</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for quiz in chapter.quizzes %}
+                                            <tr>
+                                                <td>{{ quiz.title }}</td>
+                                                <td>{% if quiz.completed %}Completed{% else %}Not Attempted{% endif %}</td>
+                                                <td>{% if quiz.score is defined %}{{ quiz.score }}{% else %}N/A{% endif %}</td>
+                                                <td>
+                                                    {% if not quiz.completed %}
+                                                    <a href="{{ url_for('user.start_quiz', quiz_id=quiz.id) }}" class="btn btn-primary btn-sm">Start Quiz</a>
+                                                    {% else %}
+                                                    <a href="{{ url_for('user.view_quiz', quiz_id=quiz.id) }}" class="btn btn-secondary btn-sm">View Quiz</a>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                    {% else %}
+                                    <p>No quizzes available for this chapter.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p>No chapters available for this subject.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center">No subjects available.</p>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('{{ url_for("user.user_summary") }}')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('quizSummaryChart').getContext('2d');
+            // Calculate average score per subject
+            const labels = data.summary_data.map(item => item.subject_name);
+            const scores = data.summary_data.map(subject => {
+                const totalScore = subject.quizzes.reduce((sum, quiz) => sum + (quiz.score || 0), 0);
+                return subject.quizzes.length ? (totalScore / subject.quizzes.length) : 0;
+            });
+
+            const chartData = {
+                labels: labels,
+                datasets: [{
+                    label: 'Average Quiz Score (%)',
+                    data: scores,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            };
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100, // Assuming scores are percentages
+                            title: {
+                                display: true,
+                                text: 'Score (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Subjects'
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error loading chart data:', error);
+            alert('Failed to load chart data. Check console for details.');
+        });
+});
+</script>
+{% endblock %}

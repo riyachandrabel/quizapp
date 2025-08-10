@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ quiz.title }}</h2>
+    <p>Duration: {{ quiz.duration }} minutes</p>
+    <div id="timer" class="alert alert-info text-center">
+        Time Remaining: <span id="time-left">00:00</span>
+    </div>
+
+    <form id="quiz-form" action="{{ url_for('user.submit_quiz', quiz_id=quiz.id) }}" method="POST">
+        {% for question in questions %}
+        <div class="mb-3">
+            <p><strong>{{ question.question_text }}</strong></p>
+            <div class="form-check">
+                <input type="radio" class="form-check-input" name="question_{{ question.id }}" value="1" id="option_{{ question.id }}_1" required>
+                <label class="form-check-label" for="option_{{ question.id }}_1">{{ question.option_1 }}</label>
+            </div>
+            <div class="form-check">
+                <input type="radio" class="form-check-input" name="question_{{ question.id }}" value="2" id="option_{{ question.id }}_2" required>
+                <label class="form-check-label" for="option_{{ question.id }}_2">{{ question.option_2 }}</label>
+            </div>
+            <div class="form-check">
+                <input type="radio" class="form-check-input" name="question_{{ question.id }}" value="3" id="option_{{ question.id }}_3" required>
+                <label class="form-check-label" for="option_{{ question.id }}_3">{{ question.option_3 }}</label>
+            </div>
+            <div class="form-check">
+                <input type="radio" class="form-check-input" name="question_{{ question.id }}" value="4" id="option_{{ question.id }}_4" required>
+                <label class="form-check-label" for="option_{{ question.id }}_4">{{ question.option_4 }}</label>
+            </div>
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Submit Quiz</button>
+    </form>
+    <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary mt-3">Cancel</a>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const durationMinutes = {{ quiz.duration }};
+    const durationSeconds = durationMinutes * 60;
+    const endTime = new Date().getTime() + durationSeconds * 1000;
+
+    const timerElement = document.getElementById('timer');
+    const timeLeftElement = document.getElementById('time-left');
+    const formElement = document.getElementById('quiz-form');
+
+    let isSubmitted = false;
+
+    const timer = setInterval(function() {
+        if (isSubmitted) {
+            clearInterval(timer);
+            return;
+        }
+
+        const now = new Date().getTime();
+        const timeLeft = endTime - now;
+
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            timeLeftElement.innerText = '00:00';
+            timerElement.classList.remove('alert-info', 'alert-warning');
+            timerElement.classList.add('alert-danger');
+            timerElement.innerText = 'Time is up! Submitting your quiz now.';
+            isSubmitted = true;
+            formElement.submit();
+            return;
+        }
+
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+        timeLeftElement.innerText = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        if (timeLeft <= 60 * 1000) {
+            timerElement.classList.remove('alert-info');
+            timerElement.classList.add('alert-warning');
+        }
+    }, 1000);
+
+    formElement.addEventListener('submit', function() {
+        isSubmitted = true;
+        timerElement.innerText = 'Submitting...';
+        timerElement.classList.remove('alert-info', 'alert-warning');
+        timerElement.classList.add('alert-success');
+    });
+});
+</script>
+{% endblock %}

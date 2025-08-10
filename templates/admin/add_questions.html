@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Add Questions to Quiz: {{ quiz.title }}</h2>
+
+<!-- Display existing questions -->
+{% if questions %}
+<h3>Existing Questions</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Question</th>
+            <th>Options</th>
+            <th>Correct Option</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for question in questions %}
+        <tr>
+            <td>{{ question.question_text }}</td>
+            <td>
+                1. {{ question.option_1 }}<br>
+                2. {{ question.option_2 }}<br>
+                3. {{ question.option_3 }}<br>
+                4. {{ question.option_4 }}
+            </td>
+            <td>{{ question.correct_option }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- Form to add a new question -->
+<h3>Add a New Question</h3>
+<form method="post">
+    <div class="mb-3">
+        <label for="question_text" class="form-label">Question</label>
+        <textarea id="question_text" name="question_text" class="form-control" rows="3" required></textarea>
+    </div>
+    <div class="mb-3">
+        <label for="option_1" class="form-label">Option 1</label>
+        <input type="text" id="option_1" name="option_1" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="option_2" class="form-label">Option 2</label>
+        <input type="text" id="option_2" name="option_2" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="option_3" class="form-label">Option 3</label>
+        <input type="text" id="option_3" name="option_3" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="option_4" class="form-label">Option 4</label>
+        <input type="text" id="option_4" name="option_4" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="correct_option" class="form-label">Correct Option</label>
+        <select id="correct_option" name="correct_option" class="form-select" required>
+            <option value="1">Option 1</option>
+            <option value="2">Option 2</option>
+            <option value="3">Option 3</option>
+            <option value="4">Option 4</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Add Question</button>
+</form>
+
+<!-- Back to Dashboard -->
+<a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+{% endblock %}

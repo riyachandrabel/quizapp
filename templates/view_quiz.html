@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>{{ quiz.title }}</h2>
+<p>Completed on: {{ progress.completed_on.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+<p>Your Score: {{ progress.score }}/{{ processed_questions|length }}</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Question</th>
+            <th>Your Answer</th>
+            <th>Correct Answer</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for question in processed_questions %}
+        <tr>
+            <td>{{ question.text }}</td>
+            <td>{{ question.user_answer }}</td>
+            <td>{{ question.correct_answer }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <p>Your Score: {{ progress.score }}%</p>
+</table>
+<a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+{% endblock %}
